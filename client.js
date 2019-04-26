@@ -1,6 +1,10 @@
 const io = require('socket.io-client');
 var Backoff = require('./reconnectInterval');
-var reconnectInterval = new Backoff();
+var reconnectInterval = new Backoff({
+  ms: 800,
+  max: 10000,
+  jitter:0.1
+});
 
 var WebSocketServer = {
   isConnected: false,
@@ -24,6 +28,11 @@ var WebSocketServer = {
 
     this.socket.on('connect', () => {
       this.isConnected = true;
+      reconnectInterval = new Backoff({
+        ms: 800,
+        max: 10000,
+        jitter:0.1
+      });
       console.log('[' + (new Date()) + ' Control] Client receive message ');
     });
     this.socket.on('disconnect', () => {

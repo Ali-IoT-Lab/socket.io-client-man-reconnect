@@ -1,10 +1,10 @@
 
 
-function Backoff() {
-  this.ms = 800;
-  this.max = 10000;
+function Backoff(opts) {
+  this.ms = opts.ms;
+  this.max = opts.max;
   this.factor = 2;
-  this.jitter = 0.1;
+  this.jitter = opts.jitter;
   this.attempts = 0;
 }
 
