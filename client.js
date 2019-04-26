@@ -1,5 +1,6 @@
 const io = require('socket.io-client');
 var Backoff = require('./reconnectInterval');
+
 var reconnectInterval = new Backoff({
   ms: 800,
   max: 10000,
@@ -52,6 +53,13 @@ var WebSocketServer = {
     });
     this.socket.on('connect_error', (data) => {
       console.error('[' + (new Date()) + ' Control] Connect connect_error  ');
+      this.isConnected = false;
+      this.interval = setTimeout(() => {
+        WebSocketServer.connect()
+      },reconnectInterval.duration());
+    });
+    this.socket.on('connect_timeout', (data) => {
+      console.error('[' + (new Date()) + ' Control] Connect connect_timeout  ');
       this.isConnected = false;
       this.interval = setTimeout(() => {
         WebSocketServer.connect()
