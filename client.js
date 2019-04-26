@@ -1,4 +1,7 @@
 const io = require('socket.io-client');
+var Backoff = require('./reconnectInterval');
+var reconnectInterval = new Backoff();
+
 var WebSocketServer = {
   isConnected: false,
   socket: null,
@@ -9,50 +12,41 @@ var WebSocketServer = {
       delete this.socket;
       this.socket = null;
     }
+
+    console.log("------------------------reconnectInterval------------------------------")
+    //console.log(reconnectInterval.duration())
+
     this.socket = io.connect('http://localhost:3000', {
-      reconnection: false
+      secure:true,
+      reconnection:false,
+      transports:['websocket', 'polling'],
     });
+
     this.socket.on('connect', () => {
       this.isConnected = true;
       console.log('[' + (new Date()) + ' Control] Client receive message ');
-
-
     });
     this.socket.on('disconnect', () => {
       console.error('[' + (new Date()) + ' Control] Connect disconnect  ');
       this.isConnected = false;
-      this.interval = setInterval(() => {
-        if (this.isConnected) {
-          clearInterval(this.interval);
-          this.interval = null;
-          return;
-        }
+      this.interval = setTimeout(() => {
         WebSocketServer.connect()
-      }, 5000);
+      },reconnectInterval.duration());
     });
+
     this.socket.on('error', (error) => {
       console.error('[' + (new Date()) + ' Control] Connect error  ');
       this.isConnected = false;
-      this.interval = setInterval(() => {
-        if (this.isConnected) {
-          clearInterval(this.interval);
-          this.interval = null;
-          return;
-        }
+      this.interval = setTimeout(() => {
         WebSocketServer.connect()
-      }, 5000);
+      },reconnectInterval.duration());
     });
     this.socket.on('connect_error', (data) => {
       console.error('[' + (new Date()) + ' Control] Connect connect_error  ');
       this.isConnected = false;
-      this.interval = setInterval(() => {
-        if (this.isConnected) {
-          clearInterval(this.interval);
-          this.interval = null;
-          return;
-        }
+      this.interval = setTimeout(() => {
         WebSocketServer.connect()
-      }, 5000);
+      },reconnectInterval.duration());
     });
     return this.socket;
   }
